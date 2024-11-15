@@ -3,5 +3,11 @@
   "description": "todo",
   "code": "/plugin.js",
   "icon": "/icon.png",
-  "permissions": ["page:read", "content:read", "file:read", "selection:read"]
+  "permissions": [
+    "page:read",
+    "content:read",
+    "file:read",
+    "selection:read",
+    "comment:write"
+  ]
 }
