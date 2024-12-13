@@ -1,14 +1,15 @@
 import type { Shape, Comment, CommentThread } from '@penpot/plugin-types';
 import type { PluginMessageEvent } from './model';
 
-penpot.ui.open('Penpot Pinned Comments plugin', `?theme=${penpot.theme}`);
+penpot.ui.open('Comment Tracker', `?theme=${penpot.theme}`);
 
 penpot.on('themechange', (theme) => {
   sendMessage({ type: 'theme', content: theme });
 });
 
 penpot.on('selectionchange', (elementIds: string[]) => {
-  pinCommentsToShapes(elementIds)
+  pinCommentsToShapes(elementIds);
+  getThreadsByShapeId(elementIds);
 })
 
 function sendMessage(message: PluginMessageEvent) {
@@ -31,18 +32,14 @@ async function pinCommentsToShapes(shapeIds: string[] = []) {
 
   try {
     const commentThreads: CommentThread[] = await page.findCommentThreads();
-    let shapes = page.findShapes();
-
-    if(shapeIds.length) {
-      shapes = shapes.filter((shape: Shape) => shapeIds.includes(shape.id))
-    }
+    const shapes = await getShapesByIds(shapeIds)
 
     for (const thread of commentThreads) {
       const commentPosition = thread.position;
       
       const targetShape = shapes.find(shape => isPointInShape(commentPosition, shape));
       if (targetShape) {
-        await thread.reply(`📌 Pinned to id:${targetShape.id}`)
+        targetShape.setSharedPluginData('pinnedComments', thread.seqNumber.toString(), 'pinned');
       }
     }
   } catch (error) {
@@ -50,23 +47,42 @@ async function pinCommentsToShapes(shapeIds: string[] = []) {
   }
 }
 
-async function getThreadsByElementId(elementId: string) {
-  const allThreads: CommentThread[]|undefined = await penpot.currentPage?.findCommentThreads();
-  for(const thread of allThreads ?? []) {
-    const comments: Comment[]|undefined = await thread.findComments();
-    let results = [];
-    for (const comment of comments ?? []) {
-      const pattern = /📌 Pinned to id:([a-zA-Z0-9-]+)/;
-      const match = comment.content.match(pattern);
-      if (match) {
-        const extractedId = match[1];
-        if(extractedId === elementId) {
-          results.push(comments.shift()?.content)
-        }
+async function getShapesByIds(shapeIds: string[]): Promise<Shape[]> {
+  const page = penpot.currentPage;
+  if (!page) return [];
+
+  let shapes = page.findShapes();
+
+  if(shapeIds.length) {
+    shapes = shapes.filter((shape: Shape) => shapeIds.includes(shape.id));
+  }
+
+  return shapes;
+}
+
+async function getThreadsByShapeId(shapeIds: string[]) {
+  const page = penpot.currentPage;
+  if (!page) return [];
+
+  const shapes: Shape[] = await getShapesByIds(shapeIds);
+  const threadIds: Number[] = [];
+
+  for (const shape of shapes) {
+    const sharedKeys = shape.getSharedPluginDataKeys('pinnedComments');
+    sharedKeys.forEach((key) => {
+      const seqNumber = parseInt(key);
+      if(!threadIds.includes(seqNumber)) {
+        threadIds.push(seqNumber);
       }
+    });
+  }
+
+  const commentThreads: CommentThread[] = await page.findCommentThreads();
+  for (const thread of commentThreads) {
+    if(threadIds.includes(thread.seqNumber)) {
+      const comments: Comment[] = await thread.findComments();
+      console.log(comments[0].content);
     }
-    console.log(results)
   }
 }
 
-getThreadsByElementId('')
