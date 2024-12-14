@@ -8,7 +8,7 @@ export interface ThemePluginEvent {
 }
 
 export interface PinCommentEvent {
-  type: 'pin-comment'
+  type: 'threads'
   content: string
 }
 

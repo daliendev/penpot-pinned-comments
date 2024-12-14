@@ -5,7 +5,7 @@
   "icon": "/icon.png",
   "permissions": [
     "page:read",
-    "content:read",
+    "content:write",
     "file:read",
     "selection:read",
     "comment:write"
