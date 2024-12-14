@@ -7,4 +7,10 @@ export interface ThemePluginEvent {
   content: string
 }
 
-export type PluginMessageEvent = ThemePluginEvent
+export interface PinCommentEvent {
+  type: 'threads'
+  content: string
+}
+
+export type PluginMessageEvent = ThemePluginEvent | PinCommentEvent
+
