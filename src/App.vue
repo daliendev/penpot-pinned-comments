@@ -40,12 +40,12 @@ onMounted(() => {
           :key="idx"
           class="comment__tracker__element">
           <button @click="openedThread = (openedThread === idx) ? null : idx">
-            📌 {{ thread[0].author }}: {{ thread[0].content }}
+            📌 {{ thread[0] }}
           </button>
           <div v-if="openedThread === idx">
             <div v-for="comment in thread.slice(1)"
               class="comment__tracker__text__element">
-              {{ comment.author }}: {{ comment.content }}
+              {{ comment }}
             </div>
           </div>
         </li>
